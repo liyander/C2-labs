@@ -1,0 +1,16 @@
+services:
+  windows-agent:
+    build:
+      context: ./docker/windows-agent
+    container_name: windows-agent
+    profiles: ["windows"]
+    restart: unless-stopped
+    environment:
+      AGENT_LAUNCHER: ${WINDOWS_AGENT_LAUNCHER:-}
+    networks:
+      - c2_lab
+
+networks:
+  c2_lab:
+    external: true
+    name: c2-lab-net

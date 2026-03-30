@@ -1,0 +1,40 @@
+services:
+  empire:
+    build:
+      context: ./docker/empire
+    image: c2-labs-empire:latest
+    container_name: empire-c2
+    restart: unless-stopped
+    environment:
+      EMPIRE_ADMIN_USERNAME: ${EMPIRE_ADMIN_USERNAME:-empireadmin}
+      EMPIRE_ADMIN_PASSWORD: ${EMPIRE_ADMIN_PASSWORD:-ChangeThisNow!}
+    ports:
+      - "1337:1337"
+      - "5000:5000"
+    volumes:
+      - empire_data:/empire/server/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:1337/api/v2/meta/version"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  ubuntu-agent:
+    build:
+      context: ./docker/ubuntu-agent
+    container_name: ubuntu-agent
+    restart: unless-stopped
+    depends_on:
+      empire:
+        condition: service_started
+    environment:
+      AGENT_LAUNCHER: ${UBUNTU_AGENT_LAUNCHER:-}
+    networks:
+      - c2_lab
+
+volumes:
+  empire_data:
+
+networks:
+  c2_lab:
+    name: c2-lab-net
