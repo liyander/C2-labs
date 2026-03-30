@@ -9,10 +9,12 @@ services:
       EMPIRE_ADMIN_USERNAME: ${EMPIRE_ADMIN_USERNAME:-empireadmin}
       EMPIRE_ADMIN_PASSWORD: ${EMPIRE_ADMIN_PASSWORD:-ChangeThisNow!}
     ports:
-      - "1337:1337"
-      - "5000:5000"
+      - "0.0.0.0:1337:1337"
+      - "0.0.0.0:5000:5000"
     volumes:
       - empire_data:/empire/server/data
+    networks:
+      - c2_lab
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:1337/api/v2/meta/version"]
       interval: 20s
@@ -22,6 +24,7 @@ services:
   ubuntu-agent:
     build:
       context: ./docker/ubuntu-agent
+    image: c2-labs-ubuntu-agent:latest
     container_name: ubuntu-agent
     restart: unless-stopped
     depends_on:
@@ -29,6 +32,20 @@ services:
         condition: service_started
     environment:
       AGENT_LAUNCHER: ${UBUNTU_AGENT_LAUNCHER:-}
+    networks:
+      - c2_lab
+
+  linux-victim:
+    build:
+      context: ./docker/linux-victim
+    image: c2-labs-linux-victim:latest
+    container_name: linux-victim
+    restart: unless-stopped
+    depends_on:
+      empire:
+        condition: service_started
+    environment:
+      BEACON_LAUNCHER: ${LINUX_VICTIM_LAUNCHER:-}
     networks:
       - c2_lab
 

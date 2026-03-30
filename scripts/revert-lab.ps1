@@ -40,9 +40,9 @@ if ($volumes) {
 }
 
 if ($RemoveAgentImages) {
-    $images = docker images --format '{{.Repository}} {{.ID}}' | Where-Object { $_ -match '^c2-labs-(ubuntu-agent|windows-agent)\s' }
+    $images = docker images --format '{{.Repository}} {{.ID}}' | Where-Object { $_ -match '^c2-labs-(empire|ubuntu-agent|windows-agent|linux-victim|windows-victim)\s' }
     if ($images) {
-        Write-Host 'Removing locally built agent images...'
+        Write-Host 'Removing locally built lab images...'
         $imageIds = $images | ForEach-Object { ($_ -split '\s+')[1] } | Select-Object -Unique
         $imageIds | ForEach-Object { docker image rm -f $_ | Out-Null }
     }

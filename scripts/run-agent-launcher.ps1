@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('ubuntu', 'windows')]
+    [ValidateSet('ubuntu', 'windows', 'linux-victim', 'windows-victim')]
     [string]$Target,
 
     [Parameter(Mandatory = $true)]
@@ -16,10 +16,15 @@ if (-not (Test-Path '.env.lab')) {
     throw 'Missing .env.lab. Run scripts/start-lab.ps1 first.'
 }
 
-$service = if ($Target -eq 'ubuntu') { 'ubuntu-agent' } else { 'windows-agent' }
+$service = switch ($Target) {
+    'ubuntu' { 'ubuntu-agent' }
+    'windows' { 'windows-agent' }
+    'linux-victim' { 'linux-victim' }
+    'windows-victim' { 'windows-victim' }
+}
 $composeArgs = @('--env-file', '.env.lab')
 
-if ($Target -eq 'windows') {
+if ($Target -eq 'windows' -or $Target -eq 'windows-victim') {
     $composeArgs += @('-f', 'docker-compose.yml', '-f', 'docker-compose.windows.yml', '--profile', 'windows')
 }
 
