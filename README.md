@@ -55,6 +55,54 @@ docker compose --env-file .env.lab build empire ubuntu-agent linux-victim
 
 ## 1) Start Lab
 
+Linux single command start (build + run):
+
+```bash
+chmod +x scripts/start-all.sh scripts/revert-lab.sh
+./scripts/start-all.sh
+```
+
+Linux force clean rebuild while starting:
+
+```bash
+./scripts/start-all.sh --rebuild
+```
+
+Linux revert/cleanup:
+
+```bash
+./scripts/revert-lab.sh
+```
+
+Linux revert/cleanup including local images:
+
+```bash
+./scripts/revert-lab.sh --remove-images
+```
+
+Note for Linux environments:
+- Native Linux Docker hosts cannot run Windows containers.
+- Run only `empire`, `ubuntu-agent`, and `linux-victim` on Linux.
+- Run `windows-agent` and `windows-victim` from a Windows Docker host.
+
+Single command start (build + run):
+
+```powershell
+./scripts/start-all.ps1
+```
+
+Single command start including Windows services:
+
+```powershell
+./scripts/start-all.ps1 -IncludeWindows
+```
+
+Force clean rebuild while starting:
+
+```powershell
+./scripts/start-all.ps1 -Rebuild
+```
+
 From workspace root:
 
 ```powershell
