@@ -3,7 +3,7 @@ set -euo pipefail
 
 INCLUDE_WINDOWS=0
 REBUILD=0
-AUTO_DEPLOY=0
+AUTO_DEPLOY=1 # Default to auto-deploy unless overridden or existing launchers provided
 LINUX_LAUNCHER=""
 WINDOWS_LAUNCHER=""
 LINUX_TARGETS="both"
@@ -113,6 +113,11 @@ if [[ -n "$LISTENER_PORT" ]]; then
   echo "Empire listener port: ${LISTENER_PORT}"
 fi
 echo "Use scripts/run-agent-launcher.ps1 for beacon launchers if running from PowerShell."
+if [[ -z "$LINUX_LAUNCHER" && -z "$WINDOWS_LAUNCHER" ]]; then
+  echo "No specific launchers provided. Automatically deploying payload and listeners..."
+  AUTO_DEPLOY=1
+fi
+
 if [[ "$AUTO_DEPLOY" -eq 1 ]]; then
   echo "Starting fully automated listener and payload deployment..."
   if [[ -x ./scripts/auto-setup-empire.sh ]]; then
