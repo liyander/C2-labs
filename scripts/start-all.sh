@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --windows-targets)
       WINDOWS_TARGETS="${2:-both}"
-      shift 2auto-deploy] [--
+      shift 2
       ;;
     *)
       echo "Unknown argument: $1" >&2
@@ -131,7 +131,6 @@ if [[ "$AUTO_DEPLOY" -eq 1 ]]; then
   fi
 fi
 
-if [[ 
 if [[ -n "$LINUX_LAUNCHER" || -n "$WINDOWS_LAUNCHER" ]]; then
   echo "Sending launcher commands to targets..."
   activate_args=(--linux-targets "$LINUX_TARGETS" --windows-targets "$WINDOWS_TARGETS")
