@@ -40,8 +40,8 @@ if [[ ! -f .env.lab ]]; then
   cat > .env.lab <<EOF
 EMPIRE_ADMIN_USERNAME=${ADMIN_USER}
 EMPIRE_ADMIN_PASSWORD=${ADMIN_PASS}
-EMPIRE_API_HOST_PORT=1337
-EMPIRE_LISTENER_HOST_PORT=5000
+EMPIRE_API_HOST_PORT=0
+EMPIRE_LISTENER_HOST_PORT=0
 UBUNTU_AGENT_LAUNCHER=
 WINDOWS_AGENT_LAUNCHER=
 LINUX_VICTIM_LAUNCHER=
@@ -61,8 +61,8 @@ docker build "${NO_CACHE_ARGS[@]}" -t c2-labs-empire:latest -t empire-c2 -f Dock
 docker build "${NO_CACHE_ARGS[@]}" -t c2-labs-ubuntu-agent:latest -f docker/ubuntu-agent/Dockerfile docker/ubuntu-agent
 docker build "${NO_CACHE_ARGS[@]}" -t c2-labs-linux-victim:latest -f docker/linux-victim/Dockerfile docker/linux-victim
 
-echo "Starting Empire + Ubuntu agent + Linux victim..."
-docker compose --env-file .env.lab up -d empire ubuntu-agent linux-victim
+echo "Starting Empire + API bridge + Ubuntu agent + Linux victim..."
+docker compose --env-file .env.lab up -d empire empire-api-bridge ubuntu-agent linux-victim
 
 API_BIND="$(docker compose --env-file .env.lab port empire 1337 | head -n 1 || true)"
 LISTENER_BIND="$(docker compose --env-file .env.lab port empire 5000 | head -n 1 || true)"
@@ -79,10 +79,11 @@ fi
 echo
 echo "Lab is up."
 if [[ -n "$API_PORT" ]]; then
-  echo "Empire API: http://127.0.0.1:${API_PORT}"
+  echo "Empire mapped API port: ${API_PORT}"
 else
   echo "Empire API port mapping not detected. Check: docker compose --env-file .env.lab ps"
 fi
+echo "UI/API compatibility endpoint: http://127.0.0.1:1337"
 if [[ -n "$LISTENER_PORT" ]]; then
   echo "Empire listener port: ${LISTENER_PORT}"
 fi

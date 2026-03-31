@@ -25,8 +25,8 @@ if (-not (Test-Path $envFile)) {
     @(
         "EMPIRE_ADMIN_USERNAME=$adminUser"
         "EMPIRE_ADMIN_PASSWORD=$adminPass"
-        'EMPIRE_API_HOST_PORT=1337'
-        'EMPIRE_LISTENER_HOST_PORT=5000'
+        'EMPIRE_API_HOST_PORT=0'
+        'EMPIRE_LISTENER_HOST_PORT=0'
         'UBUNTU_AGENT_LAUNCHER='
         'WINDOWS_AGENT_LAUNCHER='
         'LINUX_VICTIM_LAUNCHER='
@@ -51,8 +51,8 @@ $buildLinuxVictimArgs = @('build', '-t', 'c2-labs-linux-victim:latest', '-f', 'd
 if ($buildFlag) { $buildLinuxVictimArgs = @('build', '--no-cache', '-t', 'c2-labs-linux-victim:latest', '-f', 'docker/linux-victim/Dockerfile', 'docker/linux-victim') }
 & docker @buildLinuxVictimArgs
 
-Write-Host 'Starting Empire + Ubuntu agent + Linux victim...'
-docker compose --env-file .env.lab up -d empire ubuntu-agent linux-victim
+Write-Host 'Starting Empire + API bridge + Ubuntu agent + Linux victim...'
+docker compose --env-file .env.lab up -d empire empire-api-bridge ubuntu-agent linux-victim
 
 $apiBind = docker compose --env-file .env.lab port empire 1337 | Select-Object -First 1
 $listenerBind = docker compose --env-file .env.lab port empire 5000 | Select-Object -First 1
@@ -78,7 +78,7 @@ if ($IncludeWindows) {
 Write-Host ''
 Write-Host 'Lab is up.'
 if ($apiPort) {
-    Write-Host "Empire API: http://127.0.0.1:$apiPort"
+    Write-Host "Empire mapped API port: $apiPort"
 }
 else {
     Write-Host 'Empire API port mapping not detected. Check: docker compose --env-file .env.lab ps'
@@ -86,4 +86,5 @@ else {
 if ($listenerPort) {
     Write-Host "Empire listener port: $listenerPort"
 }
+Write-Host 'UI/API compatibility endpoint: http://127.0.0.1:1337'
 Write-Host 'Use scripts/run-agent-launcher.ps1 for beacon launchers.'

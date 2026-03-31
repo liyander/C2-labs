@@ -85,6 +85,11 @@ Note for Linux environments:
 - Run only `empire`, `ubuntu-agent`, and `linux-victim` on Linux.
 - Run `windows-agent` and `windows-victim` from a Windows Docker host.
 
+Default behavior in this lab:
+- Empire host ports are random by default (`EMPIRE_API_HOST_PORT=0`, `EMPIRE_LISTENER_HOST_PORT=0`).
+- A local bridge always exposes `http://127.0.0.1:1337` and forwards to Empire API.
+- This prevents UI login failures when a frontend still calls `/token` on port `1337`.
+
 If you want random host ports for Empire, set these in `.env.lab` before start:
 - `EMPIRE_API_HOST_PORT=0`
 - `EMPIRE_LISTENER_HOST_PORT=0`
@@ -96,7 +101,9 @@ docker compose --env-file .env.lab port empire 1337
 docker compose --env-file .env.lab port empire 5000
 ```
 
-Use the discovered API port in browser/API calls. Do not hardcode `http://localhost:1337` when random ports are enabled.
+Use either:
+- Discovered mapped API port for direct access, or
+- Stable bridge endpoint `http://127.0.0.1:1337`
 
 Single command start (build + run):
 
@@ -139,6 +146,7 @@ Verify C2 is exposed:
 docker compose --env-file .env.lab ps
 API_PORT=$(docker compose --env-file .env.lab port empire 1337 | sed -E 's/.*:([0-9]+)$/\1/' | head -n1)
 curl -fsS "http://127.0.0.1:${API_PORT}/api/v2/meta/version"
+curl -fsS http://127.0.0.1:1337/api/v2/meta/version
 ```
 
 To also start Windows agent container:
@@ -238,11 +246,11 @@ Also remove locally built agent images:
 - If Empire image build fails, verify base image availability:
   - `docker pull bcsecurity/empire:latest`
 - If C2 is not exposed:
-  - Recreate services after compose changes: `docker compose --env-file .env.lab up -d --build --force-recreate empire ubuntu-agent`
+  - Recreate services after compose changes: `docker compose --env-file .env.lab up -d --build --force-recreate empire empire-api-bridge ubuntu-agent linux-victim`
   - Discover current API mapping: `docker compose --env-file .env.lab port empire 1337`
   - Discover current listener mapping: `docker compose --env-file .env.lab port empire 5000`
-  - Verify local reachability using mapped API port
-  - CORS errors to `localhost:1337` usually mean the mapped API port is not 1337 in your current run
+  - Verify local reachability using mapped API port and bridge endpoint `http://127.0.0.1:1337`
+  - `ERR_CONNECTION_REFUSED` to `localhost:1337/token` means bridge is not running; start `empire-api-bridge`
 - If Windows service fails to build/run:
   - Switch Docker Desktop to Windows containers mode
   - Re-run `./scripts/start-lab.ps1 -IncludeWindows`
