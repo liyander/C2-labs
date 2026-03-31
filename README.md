@@ -85,6 +85,19 @@ Note for Linux environments:
 - Run only `empire`, `ubuntu-agent`, and `linux-victim` on Linux.
 - Run `windows-agent` and `windows-victim` from a Windows Docker host.
 
+If you want random host ports for Empire, set these in `.env.lab` before start:
+- `EMPIRE_API_HOST_PORT=0`
+- `EMPIRE_LISTENER_HOST_PORT=0`
+
+Then discover assigned ports:
+
+```bash
+docker compose --env-file .env.lab port empire 1337
+docker compose --env-file .env.lab port empire 5000
+```
+
+Use the discovered API port in browser/API calls. Do not hardcode `http://localhost:1337` when random ports are enabled.
+
 Single command start (build + run):
 
 ```powershell
@@ -124,7 +137,8 @@ Verify C2 is exposed:
 
 ```bash
 docker compose --env-file .env.lab ps
-curl -fsS http://127.0.0.1:1337/api/v2/meta/version
+API_PORT=$(docker compose --env-file .env.lab port empire 1337 | sed -E 's/.*:([0-9]+)$/\1/' | head -n1)
+curl -fsS "http://127.0.0.1:${API_PORT}/api/v2/meta/version"
 ```
 
 To also start Windows agent container:
@@ -225,8 +239,10 @@ Also remove locally built agent images:
   - `docker pull bcsecurity/empire:latest`
 - If C2 is not exposed:
   - Recreate services after compose changes: `docker compose --env-file .env.lab up -d --build --force-recreate empire ubuntu-agent`
-  - Confirm published ports show `0.0.0.0:1337->1337` in `docker compose --env-file .env.lab ps`
-  - Verify local reachability: `curl -fsS http://127.0.0.1:1337/api/v2/meta/version`
+  - Discover current API mapping: `docker compose --env-file .env.lab port empire 1337`
+  - Discover current listener mapping: `docker compose --env-file .env.lab port empire 5000`
+  - Verify local reachability using mapped API port
+  - CORS errors to `localhost:1337` usually mean the mapped API port is not 1337 in your current run
 - If Windows service fails to build/run:
   - Switch Docker Desktop to Windows containers mode
   - Re-run `./scripts/start-lab.ps1 -IncludeWindows`

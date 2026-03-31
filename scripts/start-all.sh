@@ -40,6 +40,8 @@ if [[ ! -f .env.lab ]]; then
   cat > .env.lab <<EOF
 EMPIRE_ADMIN_USERNAME=${ADMIN_USER}
 EMPIRE_ADMIN_PASSWORD=${ADMIN_PASS}
+EMPIRE_API_HOST_PORT=1337
+EMPIRE_LISTENER_HOST_PORT=5000
 UBUNTU_AGENT_LAUNCHER=
 WINDOWS_AGENT_LAUNCHER=
 LINUX_VICTIM_LAUNCHER=
@@ -62,6 +64,12 @@ docker build "${NO_CACHE_ARGS[@]}" -t c2-labs-linux-victim:latest -f docker/linu
 echo "Starting Empire + Ubuntu agent + Linux victim..."
 docker compose --env-file .env.lab up -d empire ubuntu-agent linux-victim
 
+API_BIND="$(docker compose --env-file .env.lab port empire 1337 | head -n 1 || true)"
+LISTENER_BIND="$(docker compose --env-file .env.lab port empire 5000 | head -n 1 || true)"
+
+API_PORT="${API_BIND##*:}"
+LISTENER_PORT="${LISTENER_BIND##*:}"
+
 if [[ "$INCLUDE_WINDOWS" -eq 1 ]]; then
   echo "Windows containers are not supported on a native Linux Docker host."
   echo "Run Windows services from a Windows Docker environment instead."
@@ -70,5 +78,12 @@ fi
 
 echo
 echo "Lab is up."
-echo "Empire API: http://localhost:1337"
+if [[ -n "$API_PORT" ]]; then
+  echo "Empire API: http://127.0.0.1:${API_PORT}"
+else
+  echo "Empire API port mapping not detected. Check: docker compose --env-file .env.lab ps"
+fi
+if [[ -n "$LISTENER_PORT" ]]; then
+  echo "Empire listener port: ${LISTENER_PORT}"
+fi
 echo "Use scripts/run-agent-launcher.ps1 for beacon launchers if running from PowerShell."
