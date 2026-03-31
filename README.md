@@ -55,6 +55,42 @@ docker compose --env-file .env.lab build empire ubuntu-agent linux-victim
 
 ## 1) Start Lab
 
+Recommended one-command startup from repository root:
+
+```bash
+chmod +x start scripts/start-all.sh scripts/activate-beacons.sh scripts/revert-lab.sh
+./start
+```
+
+One-command startup plus Linux auto-activation:
+
+```bash
+./start --linux-launcher "<PASTE_LINUX_LAUNCHER>"
+```
+
+**Adversary Emulation Mode (Auto Deploy):**
+Automatically sets up an HTTP listener in Empire, generates the payload, and dynamically executes it against the local containers without any UI interaction:
+
+```bash
+./start --auto-deploy
+```
+
+One-command startup plus Linux and Windows auto-activation:
+
+```bash
+./start \
+  --linux-launcher "<PASTE_LINUX_LAUNCHER>" \
+  --windows-launcher "<PASTE_WINDOWS_LAUNCHER>"
+```
+
+Optional target selection during auto-activation:
+
+```bash
+./start --linux-launcher "<PASTE_LINUX_LAUNCHER>" --linux-targets ubuntu
+./start --linux-launcher "<PASTE_LINUX_LAUNCHER>" --linux-targets linux-victim
+./start --linux-launcher "<PASTE_LINUX_LAUNCHER>" --linux-targets both
+```
+
 Linux single command start (build + run):
 
 ```bash
@@ -181,11 +217,31 @@ Use Empire UI/API/CLI to create listeners and generate launchers for:
 
 Example launcher output from Empire usually looks like a single PowerShell command.
 
+Activation workflow:
+1. Create a Linux-compatible listener and generate a launcher command.
+2. Run launcher into Linux containers:
+
+```bash
+./scripts/activate-beacons.sh --linux-launcher "<PASTE_LINUX_LAUNCHER>"
+```
+
+3. If running on a Windows Docker host, create Windows listener/launcher and run:
+
+```bash
+./scripts/activate-beacons.sh \
+  --linux-launcher "<PASTE_LINUX_LAUNCHER>" \
+  --windows-launcher "<PASTE_WINDOWS_LAUNCHER>"
+```
+
+4. Confirm check-ins in Empire agents view.
+
 Important listener host settings for this lab:
 - For Ubuntu agent in Docker network, use host `empire` and listener port `1337`.
 - For host/WSL testing from outside containers, use `127.0.0.1:1337`.
 
 ## 3) Execute Launcher In Agent Containers
+
+You can still execute manually with PowerShell helper script:
 
 Run launcher in Ubuntu agent:
 
@@ -254,4 +310,9 @@ Also remove locally built agent images:
 - If Windows service fails to build/run:
   - Switch Docker Desktop to Windows containers mode
   - Re-run `./scripts/start-lab.ps1 -IncludeWindows`
+- If agents are not activating:
+  - Ensure listeners were created in Empire before launcher execution
+  - Use one-command activation: `./start --linux-launcher "<LAUNCHER>"`
+  - Use `./scripts/activate-beacons.sh --linux-launcher "<LAUNCHER>"`
+  - Check container logs: `docker compose --env-file .env.lab logs -f ubuntu-agent linux-victim`
 - If launcher command has quote issues, wrap it in single quotes in PowerShell invocation where possible.
