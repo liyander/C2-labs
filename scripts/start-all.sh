@@ -113,7 +113,7 @@ if [[ -n "$LISTENER_PORT" ]]; then
   echo "Empire listener port: ${LISTENER_PORT}"
 fi
 echo "Use scripts/run-agent-launcher.ps1 for beacon launchers if running from PowerShell."
-"$AUTO_DEPLOY" -eq 1 ]]; then
+if [[ "$AUTO_DEPLOY" -eq 1 ]]; then
   echo "Starting fully automated listener and payload deployment..."
   if [[ -x ./scripts/auto-setup-empire.sh ]]; then
     GENERATED_LAUNCHER=$(./scripts/auto-setup-empire.sh)
